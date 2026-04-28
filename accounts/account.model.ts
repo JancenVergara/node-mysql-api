@@ -6,7 +6,8 @@ export default function model(sequelize: any) {
         passwordHash: { type: DataTypes.STRING, allowNull: false },
         title: { type: DataTypes.STRING, allowNull: false },
         firstName: { type: DataTypes.STRING, allowNull: false },
-        lastname: { type: DataTypes.STRING, allowNull: false },
+        lastName: { type: DataTypes.STRING, allowNull: false },  // fix: was 'lastname'
+        role: { type: DataTypes.STRING, allowNull: false, defaultValue: 'User' }, // ADD THIS
         acceptTerms: { type: DataTypes.BOOLEAN },
         verificationToken: { type: DataTypes.STRING },
         verified: { type: DataTypes.DATE },
@@ -24,9 +25,8 @@ export default function model(sequelize: any) {
     const options = {
         timestamps: false,
         defaultScope: { attributes: { exclude: ['passwordHash'] } },
-        scopes: { withHash: { attributes: {}, } }
+        scopes: { withHash: { attributes: {} } }
     };
 
     return sequelize.define('account', attributes, options);
 }
-

@@ -1,8 +1,9 @@
-import jwt from 'express-jwt';
+import expressJwt from 'express-jwt';
 import config from '../config.json';
-import db from '../_helpers/db';
+import { getDb } from '../_helpers/db';
 
 const { secret } = config;
+const expressjwt = (expressJwt as any).expressjwt || expressJwt;
 
 export default function authorize(roles: any = []) {
     if (typeof roles === 'string') {
@@ -10,19 +11,23 @@ export default function authorize(roles: any = []) {
     }
 
     return [
-        jwt({ secret, algorithms: ['HS256'] }),
+        expressjwt({ secret, algorithms: ['HS256'] }),
         async (req: any, res: any, next: any) => {
-            const account = await db.Account.findByPk(req.user.id);
+            try {
+                const db = getDb();
+                const account = await db.Account.findByPk(req.auth.id);
 
-            if (!account || (roles.length && !roles.includes(account.role))) {
-                return res.status(401).json({ message: 'Unauthorized' });
+                if (!account || (roles.length && !roles.includes(account.role))) {
+                    return res.status(401).json({ message: 'Unauthorized' });
+                }
+
+                req.auth.role = account.role;
+                const refreshTokens = await account.getRefreshTokens();
+                req.auth.ownsToken = (token: any) => !!refreshTokens.find((x: any) => x.token === token);
+                next();
+            } catch (err) {
+                next(err);
             }
-
-            req.user.role = account.role;
-            const refreshTokens = await account.getRefreshTokens();
-            req.user.ownsToken = (token: any) => !!refreshTokens.find((x: any) => x.token === token);
-            next();
         }
     ];
 }
-

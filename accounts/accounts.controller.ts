@@ -27,25 +27,25 @@ function authenticateSchema(req: any, res: any, next: any) {
         email: Joi.string().required(),
         password: Joi.string().required(),
     });
-    validateRequest(req, res, schema);
+    validateRequest(req, next, schema);
 }
 
 function authenticate(req: any, res: any, next: any) {
     const { email, password } = req.body;
     const ipAddress = req.ip;
     accountService.authenticate({ email, password, ipAddress })
-        .then(({ refreshToken, ...account}: any) => {
+        .then(({ refreshToken, ...account }: any) => {
             setTokenCookie(res, refreshToken);
             res.json(account);
         })
         .catch(next);
 }
 
-function refreshToken(req: any, res:any, next: any) {
+function refreshToken(req: any, res: any, next: any) {
     const token = req.cookies.refreshToken;
     const ipAddress = req.ip;
     accountService.refreshToken({ token, ipAddress })
-        .then(({ refreshToken, ...account}: any ) => {
+        .then(({ refreshToken, ...account }: any) => {
             setTokenCookie(res, refreshToken);
             res.json(account);
         })
@@ -65,7 +65,7 @@ function revokeToken(req: any, res: any, next: any) {
 
     if (!token) return res.status(400).json({ message: 'Token is required' });
 
-    if (!req.user.ownsToken(token) && req.user.role !== Role.Admin) {
+    if (!req.auth.ownsToken(token) && req.auth.role !== Role.Admin) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
@@ -77,36 +77,36 @@ function revokeToken(req: any, res: any, next: any) {
 function registerSchema(req: any, res: any, next: any) {
     const schema = Joi.object({
         title: Joi.string().required(),
-        firstName: Joi.string(). required(),
+        firstName: Joi.string().required(),
         lastName: Joi.string().required(),
         email: Joi.string().email().required(),
         password: Joi.string().min(6).required(),
         confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
-        acceptTerms: Joi.boolean().valid(true). required()
+        acceptTerms: Joi.boolean().valid(true).required()
     });
     validateRequest(req, next, schema);
 }
 
 function register(req: any, res: any, next: any) {
     accountService.register(req.body, req.get('origin'))
-        .then(() => res.json({ message: 'Registration Successful, Please check your email for verification instructions'}))
+        .then(() => res.json({ message: 'Registration successful, please check your email for verification instructions' }))
         .catch(next);
 }
 
-function verifyEmailSchema( req: any, res: any, next: any) {
+function verifyEmailSchema(req: any, res: any, next: any) {
     const schema = Joi.object({
         token: Joi.string().required()
     });
     validateRequest(req, next, schema);
 }
 
-function verifyEmail (req: any, res:any, next: any) {
+function verifyEmail(req: any, res: any, next: any) {
     accountService.verifyEmail(req.body)
-        .then(() => res.json({ message: 'Verification successful, you can now login'}))
+        .then(() => res.json({ message: 'Verification successful, you can now login' }))
         .catch(next);
 }
 
-function forgotPasswordSchema (req: any, res: any, next:any) {
+function forgotPasswordSchema(req: any, res: any, next: any) {
     const schema = Joi.object({
         email: Joi.string().email().required()
     });
@@ -115,7 +115,7 @@ function forgotPasswordSchema (req: any, res: any, next:any) {
 
 function forgotPassword(req: any, res: any, next: any) {
     accountService.forgotPassword(req.body, req.get('origin'))
-        .then(() => res.json({ message: 'Please check your email for password reset instructions'}))
+        .then(() => res.json({ message: 'Please check your email for password reset instructions' }))
         .catch(next);
 }
 
@@ -154,7 +154,7 @@ function getAll(req: any, res: any, next: any) {
 }
 
 function getById(req: any, res: any, next: any) {
-    if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
+    if (Number(req.params.id) !== req.auth.id && req.auth.role !== Role.Admin) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
@@ -190,18 +190,18 @@ function updateSchema(req: any, res: any, next: any) {
         email: Joi.string().email().empty(''),
         password: Joi.string().min(6).empty(''),
         confirmPassword: Joi.string().valid(Joi.ref('password')).empty('')
-    }
+    };
 
-    if(req.user.role === Role.Admin) {
+    if (req.auth.role === Role.Admin) {
         schemaRules.role = Joi.string().valid(Role.Admin, Role.User).empty('');
     }
-    
+
     const schema = Joi.object(schemaRules).with('password', 'confirmPassword');
     validateRequest(req, next, schema);
 }
 
 function update(req: any, res: any, next: any) {
-    if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
+    if (Number(req.params.id) !== req.auth.id && req.auth.role !== Role.Admin) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
@@ -211,7 +211,7 @@ function update(req: any, res: any, next: any) {
 }
 
 function _delete(req: any, res: any, next: any) {
-    if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
+    if (Number(req.params.id) !== req.auth.id && req.auth.role !== Role.Admin) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
@@ -223,9 +223,7 @@ function _delete(req: any, res: any, next: any) {
 function setTokenCookie(res: any, token: any) {
     const cookieOptions = {
         httpOnly: true,
-        expires: new Date(Date.now() + 7*24*60*60*1000)
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     };
     res.cookie('refreshToken', token, cookieOptions);
 }
-
-
