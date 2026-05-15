@@ -72,6 +72,7 @@ export default {
     secret: env('JWT_SECRET', config.secret),
     emailFrom: env('EMAIL_FROM', config.emailFrom),
     emailDelivery: env('EMAIL_DELIVERY', 'smtp'),
+    sendGridApiKey: env('SENDGRID_API_KEY', ''),
     smtpOptions,
     corsOrigins: env('CORS_ORIGIN', env('CORS_ORIGINS', '')).split(',').map((origin: string) => origin.trim()).filter(Boolean),
     cookieSameSite: env('COOKIE_SAMESITE', 'lax'),
