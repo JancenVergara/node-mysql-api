@@ -11,7 +11,7 @@ export default function authorize(roles: any = []) {
     }
 
     return [
-        expressjwt({ secret, algorithms: ['HS256'] }),
+        expressjwt({ secret, algorithms: ['HS256'], requestProperty: 'auth' }),
         async (req: any, res: any, next: any) => {
             try {
                 const db = getDb();
