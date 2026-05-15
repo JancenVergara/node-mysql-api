@@ -10,15 +10,7 @@ const defaultConfig = {
         database: 'node_mysql_api'
     },
     secret: '',
-    emailFrom: '',
-    smtpOptions: {
-        host: '',
-        port: 587,
-        auth: {
-            user: '',
-            pass: ''
-        }
-    }
+    emailFrom: ''
 };
 
 function loadFileConfig() {
@@ -58,22 +50,11 @@ const database = {
     createDatabase: envBoolean('DB_CREATE_DATABASE', !databaseUrl && config.database.host === 'localhost')
 };
 
-const smtpOptions = {
-    host: env('SMTP_HOST', config.smtpOptions.host),
-    port: envNumber('SMTP_PORT', config.smtpOptions.port),
-    auth: {
-        user: env('SMTP_USER', config.smtpOptions.auth.user),
-        pass: env('SMTP_PASS', config.smtpOptions.auth.pass)
-    }
-};
-
 export default {
     database,
     secret: env('JWT_SECRET', config.secret),
     emailFrom: env('EMAIL_FROM', config.emailFrom),
-    emailDelivery: env('EMAIL_DELIVERY', 'smtp'),
     sendGridApiKey: env('SENDGRID_API_KEY', ''),
-    smtpOptions,
     corsOrigins: env('CORS_ORIGIN', env('CORS_ORIGINS', '')).split(',').map((origin: string) => origin.trim()).filter(Boolean),
     cookieSameSite: env('COOKIE_SAMESITE', 'lax'),
     cookieSecure: envBoolean('COOKIE_SECURE', process.env.NODE_ENV === 'production')
