@@ -1,8 +1,8 @@
 import expressJwt from 'express-jwt';
-import config from '../config.json';
+import appConfig from '../_helpers/app-config';
 import { getDb } from '../_helpers/db';
 
-const { secret } = config;
+const { secret } = appConfig;
 const expressjwt = (expressJwt as any).expressjwt || expressJwt;
 
 export default function authorize(roles: any = []) {

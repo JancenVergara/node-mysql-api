@@ -1,4 +1,4 @@
-import config from '../config.json';
+import appConfig from './app-config';
 import mysql from 'mysql2/promise';
 import { Sequelize } from 'sequelize';
 import accountModel from '../accounts/account.model';
@@ -12,15 +12,20 @@ export function getDb() {
 
 export async function initialize() {
     console.log('Initializing database...');
-    const { host, port, user, password, database } = config.database;
-    const connection = await mysql.createConnection({ host, port, user, password });
+    const { host, port, user, password, database, ssl, createDatabase } = appConfig.database;
+    const dialectOptions = ssl ? { ssl: { rejectUnauthorized: false } } : {};
 
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
-    await connection.end();
+    if (createDatabase) {
+        const connection = await mysql.createConnection({ host, port, user, password, ssl: ssl ? { rejectUnauthorized: false } : undefined });
+        await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
+        await connection.end();
+    }
 
     const sequelize = new Sequelize(database, user, password, {
         host,
+        port,
         dialect: 'mysql',
+        dialectOptions,
         pool: { max: 5, min: 0, acquire: 30000, idle: 10000 }
     });
 

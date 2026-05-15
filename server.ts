@@ -6,22 +6,32 @@ import errorHandler from './_middleware/error-handler';
 import accountsController from './accounts/accounts.controller';
 import swaggerDocs from './_helpers/swagger';
 import { initialize } from './_helpers/db';
+import appConfig from './_helpers/app-config';
 
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: true }));
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || appConfig.corsOrigins.length === 0 || appConfig.corsOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true
+}));
 app.use('/accounts', accountsController);
 app.use('/api-docs', swaggerDocs);
 app.use(errorHandler);
 
-const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000;
+const port = Number(process.env.PORT) || 4000;
 
 initialize()
     .then(() => {
-        app.listen(port, () => console.log('Server listening on port ' + port));
+        app.listen(port, '0.0.0.0', () => console.log('Server listening on port ' + port));
     })
     .catch(err => {
         console.error('Failed to initialize database:', err);

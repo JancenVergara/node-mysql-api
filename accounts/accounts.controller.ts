@@ -5,6 +5,7 @@ import validateRequest from '../_middleware/validate-request';
 import authorize from '../_middleware/authorize';
 import Role from '../_helpers/role';
 import accountService from './account.service';
+import appConfig from '../_helpers/app-config';
 
 router.post('/authenticate', authenticateSchema, authenticate);
 router.post('/refresh-token', refreshToken);
@@ -221,9 +222,11 @@ function _delete(req: any, res: any, next: any) {
 }
 
 function setTokenCookie(res: any, token: any) {
-    const cookieOptions = {
+    const cookieOptions: any = {
         httpOnly: true,
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        sameSite: appConfig.cookieSameSite,
+        secure: appConfig.cookieSecure
     };
     res.cookie('refreshToken', token, cookieOptions);
 }

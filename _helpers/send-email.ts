@@ -1,7 +1,13 @@
 import nodemailer from 'nodemailer';
-import config from '../config.json';
+import appConfig from './app-config';
 
-export default async function sendEmail({ to, subject, html, from = config.emailFrom }: any) {
-    const transporter = nodemailer.createTransport(config.smtpOptions);
+export default async function sendEmail({ to, subject, html, from = appConfig.emailFrom }: any) {
+    if (appConfig.emailDelivery === 'log') {
+        console.log('Email delivery is set to log mode.');
+        console.log({ from, to, subject, html });
+        return;
+    }
+
+    const transporter = nodemailer.createTransport(appConfig.smtpOptions);
     await transporter.sendMail({ from, to, subject, html});
 }
